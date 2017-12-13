@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Hello, world!</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container">
+        <h3>这是一条纸带</h3>
+        <div class="btn-group" role="group" id="tape">
+            <button type="button" id="0" class="btn btn-secondary" onclick="flip(this)">0</button>
+            <button type="button" id="1" class="btn btn-secondary" onclick="flip(this)">0</button>
+            <button type="button" id="2" class="btn btn-secondary" onclick="flip(this)">0</button>
+            <button type="button" id="3" class="btn btn-secondary" onclick="flip(this)">0</button>
+            <button type="button" id="4" class="btn btn-secondary" onclick="flip(this)">0</button>
+            <button type="button" id="5" class="btn btn-secondary" onclick="flip(this)">0</button>
+            <button type="button" id="6" class="btn btn-secondary" onclick="flip(this)">0</button>
+            <button type="button" id="7" class="btn btn-secondary" onclick="flip(this)">0</button>
+            <button type="button" id="8" class="btn btn-secondary" onclick="flip(this)">0</button>
+            <button type="button" id="9" class="btn btn-secondary" onclick="flip(this)">0</button>
+        </div>
+        <p></p>
+        <div class="form-group form-inline">
+            <label for="initial">初始状态：</label>
+            <input class="form-control" id="initial" value="0"></input>
+            <label for="current">当前状态：</label>
+            <input class="form-control" id="current" disabled></input>
+            <label for="pos">当前指针：</label>
+            <input class="form-control" id="pos" value="0"></input>
+        </div>
+        <div class="form-group">
+            <label for="machine">请输入状态转移矩阵：</label>
+            <textarea class="form-control" id="machine" rows="3">[[[1,1,"→"],null],[[0,0,"→"],null]]</textarea>
+        </div>
+        <div>
+            <button type="button" class="btn btn-success" onclick="run()">运行</button>
+            <button type="button" class="btn btn-warning" onclick="stop()">结束</button>
+            <button type="button" class="btn btn-info" onclick="add()">增加</button>
+        </div>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+    machine = [];
+    index = 0;
+    current = 0;
+    s = {};
+
+    function flip(cell) {
+        if (cell.innerHTML == 0) {
+            cell.innerHTML = 1;
+        } else if (cell.innerHTML == 1) {
+            cell.innerHTML = 0;
+        }
+    }
+
+    function run() {
+        machine = eval($("#machine").val());
+        n = machine.length;
+        m = machine[0].length;
+        initial = parseInt($("#initial").val());
+        current = initial;
+        index = parseInt($("#pos").val());
+        $("#current").val(initial);
+        alert("n = " + n + ";\nm = " + m + ";");
+        $("#" + index).removeClass("btn-secondary").addClass("btn-primary");
+        s = setInterval(change, 1000);
+    }
+
+    function change() {
+        value_on_tape = $("#" + index).text();
+        if (current > machine.length || current < 0 || machine[current][value_on_tape] == null) {
+            alert("Done!");
+            stop();
+            return;
+        }
+        $("#current").val(machine[current][value_on_tape][0]);
+        $("#" + index).text(machine[current][value_on_tape][1]);
+        console.log("Change: " + machine[current][value_on_tape][2]);
+        $("#" + index).removeClass("btn-primary").addClass("btn-secondary");
+        if (machine[current][value_on_tape][2] == "→" || machine[current][value_on_tape][2] == "R") {
+            index = index + 1;
+        } else if (machine[current][value_on_tape][2] == "←" || machine[current][value_on_tape][2] == "L") {
+            index = index - 1;
+        }
+        if (index == $("#tape").children().length) {
+            add();
+        }
+        current = parseInt($("#current").val());
+        $("#" + index).removeClass("btn-secondary").addClass("btn-primary");
+        $("#pos").val(index);
+    }
+
+    function add() {
+        $("#tape").append('<button type="button" id="' + $("#tape").children().length + '" class="btn btn-secondary" onclick="flip(this)">0</button>');
+    }
+
+    function stop() {
+        $("#" + index).removeClass("btn-primary").addClass("btn-secondary");
+        clearInterval(s);
+    }
+    </script>
+</body>
+
+</html>
