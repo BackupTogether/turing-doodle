@@ -8,11 +8,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.1/css/all.css">
 </head>
 
 <body>
     <div class="container">
-        <h3>这是一条纸带，单击改变其初始值</h3>
+        <br>
+        <div class="row justify-content-between">
+            <h3 class="col">这是一条纸带，单击某一位可改变其初始值</h3>
+            <button type="button" class="btn btn-info col-2" onclick="addTapeCell()">增加纸带长度</button>
+        </div>
         <div class="btn-group" role="group" id="tape">
             <button type="button" id="0" class="btn btn-secondary" onclick="flip(this)">0</button>
             <button type="button" id="1" class="btn btn-secondary" onclick="flip(this)">0</button>
@@ -25,23 +30,70 @@
             <button type="button" id="8" class="btn btn-secondary" onclick="flip(this)">0</button>
             <button type="button" id="9" class="btn btn-secondary" onclick="flip(this)">0</button>
         </div>
-        <p></p>
+        <br>
+        <br>
         <div class="form-group form-inline">
             <label for="initial">初始状态：</label>
-            <input class="form-control" id="initial" value="0"></input>
+            <input class="form-control" id="initial" value="Q1"></input>
             <label for="current">当前状态：</label>
             <input class="form-control" id="current" disabled></input>
             <label for="pos">当前指针：</label>
             <input class="form-control" id="pos" value="0"></input>
         </div>
-        <div class="form-group">
+        <!-- <div class="form-group">
             <label for="machine">请输入状态转移矩阵：</label>
             <textarea class="form-control" id="machine" rows="3">[[[1,1,"→"],null],[[0,0,"→"],null]]</textarea>
+        </div> -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">
+                        <button type="button" class="btn btn-light" onclick="addRule()"><i class="far fa-plus-square fa-lg"></i></button>
+                        <!-- <i class="fas fa-plus-square" onclick="addRule()"></i> -->
+                        <!-- <i class="far fa-plus-square fa-lg" onclick="addRule()"></i> -->
+                    </th>
+                    <th scope="col">当前状态</th>
+                    <th scope="col">纸带当前位置的值</th>
+                    <th scope="col">状态转移</th>
+                </tr>
+            </thead>
+            <tbody id="rule">
+                <tr id="row1">
+                    <th scope="row">1</th>
+                    <td>
+                        <input type="text" class="form-control rule-from-status" placeholder="当前状态">
+                    </td>
+                    <td>
+                        <input type="text" class="form-control rule-from-tape" placeholder="纸带当前位置的值">
+                    </td>
+                    <td class="form-inline">
+                        <input type="text" class="form-control col-4 rule-to-status" placeholder="下一状态">
+                        <input type="text" class="form-control col-4 rule-to-tape" placeholder="纸带变成">
+                        <!-- <input type="text" class="form-control col-4 rule-index-move" placeholder="指针移动"> -->
+                        <div class="form-group form-inline col-4">
+                            <label>指针移动：</label>
+                            <select class="form-control rule-index-move">
+                                <option value="L">左移</option>
+                                <option value="S" selected="selected">不动</option>
+                                <option value="R">右移</option>
+                            </select>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="form-group">
+            <label for="accept">请输入 Accept 集（英文逗号分隔）：</label>
+            <textarea class="form-control" id="accept" rows="2">Q2</textarea>
+        </div>
+        <div class="form-group">
+            <label for="reject">请输入 Reject 集（英文逗号分隔）：</label>
+            <textarea class="form-control" id="reject" rows="2">Q3</textarea>
         </div>
         <div>
             <button type="button" class="btn btn-success" onclick="run()">运行</button>
-            <button type="button" class="btn btn-warning" onclick="stop()">结束</button>
-            <button type="button" class="btn btn-info" onclick="add()">增加</button>
+            <button type="button" class="btn btn-warning" onclick="stop()">停止运行</button>
+            <button type="button" class="btn btn-success" onclick="getRules()">查看当前规则</button>
         </div>
     </div>
     <!-- Optional JavaScript -->
@@ -50,7 +102,9 @@
     <script src="bootstrap/popper.min.js"></script>
     <script src="bootstrap/bootstrap.min.js"></script>
     <script type="text/javascript">
-    machine = [];
+    accept = [];
+    reject = [];
+    rule_machine = {};
     index = 0;
     current = 0;
     s = {};
@@ -64,48 +118,114 @@
     }
 
     function run() {
-        machine = eval($("#machine").val());
-        n = machine.length;
-        m = machine[0].length;
-        initial = parseInt($("#initial").val());
-        current = initial;
-        index = parseInt($("#pos").val());
+        if (!getRules()) {
+            console.log("信息输入有误，取消执行");
+        }
         $("#current").val(initial);
-        alert("n = " + n + ";\nm = " + m + ";");
         $("#" + index).removeClass("btn-secondary").addClass("btn-primary");
         s = setInterval(change, 1000);
     }
 
+    function getRules() {
+        rule_machine = {};
+        for (var i = 1; i <= $("#rule").children().length; i++) {
+            var key_status = $("tr#row" + i + " .rule-from-status").val();
+            var key_tape = $("tr#row" + i + " .rule-from-tape").val();
+            if (key_status == "") {
+                alert("状态机输入有误：当前状态不能为空！");
+                return false;
+            }
+            var next_status = {};
+            next_status.rule_to_status = $("tr#row" + i + " .rule-to-status").val();
+            next_status.rule_to_tape = $("tr#row" + i + " .rule-to-tape").val();
+            next_status.rule_index_move = $("tr#row" + i + " .rule-index-move").val();
+            if (rule_machine[key_status] == null) {
+                rule_machine[key_status] = {};
+            }
+            if (rule_machine[key_status][key_tape] == null) {
+                rule_machine[key_status][key_tape] = next_status;
+            } else {
+                alert("状态机输入有误：同一状态且纸带值相同时，有多种状态转移！");
+                return false;
+            }
+        }
+        console.log(rule_machine);
+        accept = $("#accept").val().split(",");
+        reject = $("#reject").val().split(",");
+        console.log(accept);
+        console.log(reject);
+        for (var i = 0; i < accept.length; i++) {
+            if ($.inArray(accept[i], reject) != -1) {
+                alert("状态 " + accept[i] + " 同时出现在 Accept 集和 Reject 集中！");
+                return false;
+            }
+        }
+        for (key in rule_machine) {
+            rule_set = rule_machine[key];
+            for (rule_key in rule_set) {
+                rule = rule_set[rule_key];
+                if (rule_machine[rule.rule_to_status] == null && $.inArray(rule.rule_to_status, reject) == -1 && $.inArray(rule.rule_to_status, accept) == -1) {
+                    alert("状态 " + key + " 的下游状态 " + rule.rule_to_status + " 不存在！");
+                    return false;
+                }
+            }
+        }
+        initial = "" + $("#initial").val();
+        current = initial;
+        if (rule_machine[initial] == null) {
+            alert("初始状态不在状态机中！");
+            return false;
+        }
+        index = parseInt($("#pos").val());
+        if (index < 0) {
+            alert("当前指针不能是负数！");
+            return false;
+        } else if (index >= $("#tape").children().length) {
+            alert("当前指针超过纸带长度，请先增加纸带长度！");
+            return false;
+        }
+        return true;
+    }
+
     function change() {
         value_on_tape = $("#" + index).text();
-        if (current > machine.length || current < 0 || machine[current][value_on_tape] == null) {
-            alert("Done!");
+        if ($.inArray(current, reject) != -1) {
+            alert("Rejected!");
+            stop();
+            return;
+        } else if ($.inArray(current, accept) != -1) {
+            alert("Accepted!");
             stop();
             return;
         }
-        $("#current").val(machine[current][value_on_tape][0]);
-        $("#" + index).text(machine[current][value_on_tape][1]);
-        console.log("Change: " + machine[current][value_on_tape][2]);
+        $("#current").val(rule_machine[current][value_on_tape].rule_to_status);
+        $("#" + index).text(rule_machine[current][value_on_tape].rule_to_tape);
+        console.log("Change: " + rule_machine[current][value_on_tape].rule_index_move);
         $("#" + index).removeClass("btn-primary").addClass("btn-secondary");
-        if (machine[current][value_on_tape][2] == "→" || machine[current][value_on_tape][2] == "R") {
+        if (rule_machine[current][value_on_tape].rule_index_move == "R") {
             index = index + 1;
-        } else if (machine[current][value_on_tape][2] == "←" || machine[current][value_on_tape][2] == "L") {
+        } else if (rule_machine[current][value_on_tape].rule_index_move == "L") {
             index = index - 1;
         }
         if (index == $("#tape").children().length) {
-            add();
+            addTapeCell();
         }
-        current = parseInt($("#current").val());
+        current = "" + $("#current").val();
         $("#" + index).removeClass("btn-secondary").addClass("btn-primary");
         $("#pos").val(index);
     }
 
-    function add() {
+    function addTapeCell() {
         $("#tape").append('<button type="button" id="' + $("#tape").children().length + '" class="btn btn-secondary" onclick="flip(this)">0</button>');
+    }
+
+    function addRule(argument) {
+        $("#rule").append('<tr id="row' + ($("#rule").children().length + 1) + '"><th scope="row">' + ($("#rule").children().length + 1) + '</th><td><input type="text" class="form-control rule-from-status" placeholder="当前状态"></td><td><input type="text" class="form-control rule-from-tape" placeholder="纸带当前位置的值"></td><td class="form-inline"><input type="text" class="form-control col-4 rule-to-status" placeholder="下一状态"><input type="text" class="form-control col-4 rule-to-tape" placeholder="纸带变成"><div class="form-group form-inline col-4"><label>指针移动：</label><select class="form-control rule-index-move"><option value="L">左移</option><option value="S" selected="selected">不动</option><option value="R">右移</option></select></div></td></tr>');
     }
 
     function stop() {
         $("#" + index).removeClass("btn-primary").addClass("btn-secondary");
+        current = "";
         clearInterval(s);
     }
     </script>
