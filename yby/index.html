@@ -106,9 +106,9 @@
     current = 0;
     s = {};
     demo = [
-        { "button": "加载 Accept 示例", "rule_machine": { "Q0": { "0": { "rule_to_status": "Q1", "rule_to_tape": "1", "rule_index_move": "R" }, "1": { "rule_to_status": "Q0", "rule_to_tape": "1", "rule_index_move": "R" } }, "Q1": { "0": { "rule_to_status": "Q2", "rule_to_tape": "0", "rule_index_move": "L" }, "1": { "rule_to_status": "Q1", "rule_to_tape": "1", "rule_index_move": "R" } }, "Q2": { "1": { "rule_to_status": "Q3", "rule_to_tape": "0", "rule_index_move": "L" } } }, "accept": ["Q3"], "reject": ["Q4"], "tape": [1, 1, 1, 0, 1, 1, 0, 0] },
-        { "button": "加载永不停机示例", "rule_machine": { "Q0": { "0": { "rule_to_status": "Q0", "rule_to_tape": "1", "rule_index_move": "R" }, "1": { "rule_to_status": "Q0", "rule_to_tape": "0", "rule_index_move": "R" } } }, "accept": ["Q1"], "reject": ["Q2"], "tape": [1, 1, 0, 1, 0, 1] },
-        { "button": "加载 Reject 示例", "rule_machine": { "Q0": { "1": { "rule_to_status": "Q4", "rule_to_tape": "0", "rule_index_move": "R" } }, "Q1": { "0": { "rule_to_status": "Q4", "rule_to_tape": "0", "rule_index_move": "R" }, "1": { "rule_to_status": "Q2", "rule_to_tape": "1", "rule_index_move": "R" } }, "Q2": { "0": { "rule_to_status": "Q3", "rule_to_tape": "0", "rule_index_move": "R" }, "1": { "rule_to_status": "Q4", "rule_to_tape": "1", "rule_index_move": "R" } } }, "accept": ["Q3"], "reject": ["Q4"], "tape": [1, 1, 1, 1, 0] }
+        { "button": "加载 Accept 示例", "rule_machine": { "Q0": { "0": { "rule_to_status": "Q1", "rule_to_tape": "1", "rule_index_move": "R" }, "1": { "rule_to_status": "Q0", "rule_to_tape": "1", "rule_index_move": "R" } }, "Q1": { "0": { "rule_to_status": "Q2", "rule_to_tape": "0", "rule_index_move": "L" }, "1": { "rule_to_status": "Q1", "rule_to_tape": "1", "rule_index_move": "R" } }, "Q2": { "1": { "rule_to_status": "Q3", "rule_to_tape": "0", "rule_index_move": "L" } } }, "accept": ["Q3"], "reject": ["Q4"], "tape": [1, 1, 1, 0, 1, 1, 0, 0], "initial": "Q0", "index": 0 },
+        { "button": "加载永不停机示例", "rule_machine": { "Q0": { "0": { "rule_to_status": "Q0", "rule_to_tape": "1", "rule_index_move": "R" }, "1": { "rule_to_status": "Q0", "rule_to_tape": "0", "rule_index_move": "R" } } }, "accept": ["Q1"], "reject": ["Q2"], "tape": [1, 1, 0, 1, 0, 1], "initial": "Q0", "index": 0 },
+        { "button": "加载 Reject 示例", "rule_machine": { "Q0": { "1": { "rule_to_status": "Q4", "rule_to_tape": "0", "rule_index_move": "R" } }, "Q1": { "0": { "rule_to_status": "Q4", "rule_to_tape": "0", "rule_index_move": "R" }, "1": { "rule_to_status": "Q2", "rule_to_tape": "1", "rule_index_move": "R" } }, "Q2": { "0": { "rule_to_status": "Q3", "rule_to_tape": "0", "rule_index_move": "R" }, "1": { "rule_to_status": "Q4", "rule_to_tape": "1", "rule_index_move": "R" } } }, "accept": ["Q3"], "reject": ["Q4"], "tape": [1, 1, 1, 1, 0], "initial": "Q0", "index": 0 }
     ];
 
     $(document).ready(function() {
@@ -117,8 +117,22 @@
         }
     });
 
-    function loadDemo(id) {
-        // ##TODO
+    function loadDemo(i) {
+        rule_machine = demo[i].rule_machine;
+        $("#rule").text("");
+        for (key in rule_machine) {
+            for (tape_value in rule_machine[key]) {
+                $("#rule").append('<tr id="row' + ($("#rule").children().length + 1) + '"><th scope="row">' + ($("#rule").children().length + 1) + '</th><td><input type="text" class="form-control rule-from-status" placeholder="当前状态" value="' + key + '"></td><td><input type="text" class="form-control rule-from-tape" placeholder="纸带当前位置的值" value="' + tape_value + '"></td><td class="form-inline"><input type="text" class="form-control col-4 rule-to-status" placeholder="下一状态" value="' + rule_machine[key][tape_value]["rule_to_status"] + '"><input type="text" class="form-control col-4 rule-to-tape" placeholder="纸带变成" value="' + rule_machine[key][tape_value]["rule_to_tape"] + '"><div class="form-group form-inline col-4"><label>指针移动：</label><select class="form-control rule-index-move"><option value="L" ' + ((rule_machine[key][tape_value]["rule_index_move"] == "L") ? ' selected="selected"' : '') + '>左移</option><option value="S" ' + ((rule_machine[key][tape_value]["rule_index_move"] == "S") ? ' selected="selected"' : '') + '>不动</option><option value="R" ' + ((rule_machine[key][tape_value]["rule_index_move"] == "R") ? ' selected="selected"' : '') + '>右移</option></select></div></td></tr>');
+            }
+        }
+        $("#accept").val(demo[i].accept);
+        $("#reject").val(demo[i].reject);
+        $("#initial").val(demo[i].initial);
+        $("#pos").val(demo[i].index);
+        $("#tape").text("");
+        for (var j = 0; j < demo[i].tape.length; j++) {
+            $("#tape").append('<button type="button" id="' + $("#tape").children().length + '" class="btn btn-secondary" onclick="flip(this)">' + demo[i].tape[j] + '</button>');
+        }
     }
 
     function flip(cell) {
