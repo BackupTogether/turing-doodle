@@ -1,19 +1,20 @@
 <!doctype html>
 <html lang="en">
-
+<!-- 作者：殷斌一 学号：SY1706120 -->
 <head>
     <title>Turing Machine!</title>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <!-- Bootstrap CSS -->
+    <!-- 引用了一些 CSS 样式 -->
     <link rel="stylesheet" href="bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="web-fonts-with-css/css/fontawesome-all.min.css">
 </head>
 
 <body>
+    <!-- HTML 部分为页面初始结构 -->
     <div class="container">
         <br>
+        <!-- 纸带区 -->
         <div class="row justify-content-between">
             <h3 class="col">这是一条纸带，单击某一位可改变其初始值</h3>
             <button type="button" class="btn btn-info col-2" onclick="addTapeCell()">增加纸带长度</button>
@@ -27,6 +28,15 @@
         </div>
         <br>
         <br>
+        <!-- 命令按钮区 -->
+        <div>
+            <button type="button" class="btn btn-success" onclick="run()">运行</button>
+            <button type="button" class="btn btn-warning" onclick="stop()">停止运行</button>
+            <div class="btn-group" role="group" id="demo">
+            </div>
+        </div>
+        <br>
+        <!-- 状态和规则输入区 -->
         <div class="form-group form-inline">
             <label for="initial">初始状态：</label>
             <input class="form-control" id="initial" value="Q1"></input>
@@ -35,17 +45,11 @@
             <label for="pos">当前指针：</label>
             <input class="form-control" id="pos" value="0"></input>
         </div>
-        <!-- <div class="form-group">
-            <label for="machine">请输入状态转移矩阵：</label>
-            <textarea class="form-control" id="machine" rows="3">[[[1,1,"→"],null],[[0,0,"→"],null]]</textarea>
-        </div> -->
         <table class="table">
             <thead>
                 <tr>
                     <th scope="col">
                         <button type="button" class="btn btn-light" onclick="addRule()"><i class="far fa-plus-square fa-lg"></i></button>
-                        <!-- <i class="fas fa-plus-square" onclick="addRule()"></i> -->
-                        <!-- <i class="far fa-plus-square fa-lg" onclick="addRule()"></i> -->
                     </th>
                     <th scope="col">当前状态</th>
                     <th scope="col">纸带当前位置的值</th>
@@ -64,7 +68,6 @@
                     <td class="form-inline">
                         <input type="text" class="form-control col-4 rule-to-status" placeholder="下一状态">
                         <input type="text" class="form-control col-4 rule-to-tape" placeholder="纸带变成">
-                        <!-- <input type="text" class="form-control col-4 rule-index-move" placeholder="指针移动"> -->
                         <div class="form-group form-inline col-4">
                             <label>指针移动：</label>
                             <select class="form-control rule-index-move">
@@ -85,20 +88,14 @@
             <label for="reject">请输入 Reject 集（英文逗号分隔）：</label>
             <textarea class="form-control" id="reject" rows="2">Q3</textarea>
         </div>
-        <div>
-            <button type="button" class="btn btn-success" onclick="run()">运行</button>
-            <button type="button" class="btn btn-warning" onclick="stop()">停止运行</button>
-            <!-- <button type="button" class="btn btn-success" onclick="getRules()">查看当前规则</button> -->
-            <div class="btn-group" role="group" id="demo">
-            </div>
-        </div>
     </div>
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <!-- 引用了一些 js 库 -->
     <script src="bootstrap/jquery-3.2.1.slim.min.js"></script>
     <script src="bootstrap/popper.min.js"></script>
     <script src="bootstrap/bootstrap.min.js"></script>
+    <!-- 所有的程序逻辑都在接下来这段 js 里面 -->
     <script type="text/javascript">
+    // 定义了一些全局变量，方便跨函数使用
     accept = [];
     reject = [];
     rule_machine = {};
@@ -107,36 +104,52 @@
     current = 0;
     last_row = "";
     s = {};
+    // 这里是预先设定好的示例配置，可以在页面上一键加载，方便用户使用
     demo = [
         { "button": "加载 Accept 示例", "rule_machine": { "Q0": { "0": { "rule_to_status": "Q1", "rule_to_tape": "1", "rule_index_move": "R" }, "1": { "rule_to_status": "Q0", "rule_to_tape": "1", "rule_index_move": "R" } }, "Q1": { "0": { "rule_to_status": "Q2", "rule_to_tape": "0", "rule_index_move": "L" }, "1": { "rule_to_status": "Q1", "rule_to_tape": "1", "rule_index_move": "R" } }, "Q2": { "1": { "rule_to_status": "Q3", "rule_to_tape": "0", "rule_index_move": "L" } } }, "accept": ["Q3"], "reject": ["Q4"], "tape": [1, 1, 1, 0, 1, 1, 0, 0], "initial": "Q0", "index": 0 },
         { "button": "加载永不停机示例", "rule_machine": { "Q0": { "0": { "rule_to_status": "Q0", "rule_to_tape": "1", "rule_index_move": "R" }, "1": { "rule_to_status": "Q0", "rule_to_tape": "0", "rule_index_move": "R" } } }, "accept": ["Q1"], "reject": ["Q2"], "tape": [1, 1, 0, 1, 0, 1], "initial": "Q0", "index": 0 },
-        { "button": "加载 Reject 示例", "rule_machine": { "Q0": { "1": { "rule_to_status": "Q4", "rule_to_tape": "0", "rule_index_move": "R" } }, "Q1": { "0": { "rule_to_status": "Q4", "rule_to_tape": "0", "rule_index_move": "R" }, "1": { "rule_to_status": "Q2", "rule_to_tape": "1", "rule_index_move": "R" } }, "Q2": { "0": { "rule_to_status": "Q3", "rule_to_tape": "0", "rule_index_move": "R" }, "1": { "rule_to_status": "Q4", "rule_to_tape": "1", "rule_index_move": "R" } } }, "accept": ["Q3"], "reject": ["Q4"], "tape": [1, 1, 1, 1, 0], "initial": "Q0", "index": 0 }
+        { "button": "加载 Reject 示例", "rule_machine": { "Q0": { "0": { "rule_to_status": "Q4", "rule_to_tape": "0", "rule_index_move": "R" }, "1": { "rule_to_status": "Q1", "rule_to_tape": "1", "rule_index_move": "R" } }, "Q1": { "0": { "rule_to_status": "Q4", "rule_to_tape": "0", "rule_index_move": "R" }, "1": { "rule_to_status": "Q2", "rule_to_tape": "1", "rule_index_move": "R" } }, "Q2": { "0": { "rule_to_status": "Q4", "rule_to_tape": "0", "rule_index_move": "R" }, "1": { "rule_to_status": "Q3", "rule_to_tape": "1", "rule_index_move": "R" } }, "Q3": { "0": { "rule_to_status": "Q5", "rule_to_tape": "0", "rule_index_move": "R" }, "1": { "rule_to_status": "Q4", "rule_to_tape": "1", "rule_index_move": "R" } } }, "accept": ["Q5"], "reject": ["Q4"], "tape": [1, 1, 1, 1, 0], "initial": "Q0", "index": 0 }
     ];
 
+    /**
+     * 当页面加载完成的时候，遍历 demo 中的示例，给每个示例添加一个触发按钮，点击按钮时会触发 loadDemo() 函数
+     */
     $(document).ready(function() {
         for (var i = 0; i < demo.length; i++) {
             $("#demo").append('<button type="button" id="demo' + i + '" class="btn btn-outline-info" onclick="loadDemo(' + i + ')">' + demo[i].button + '</button>');
         }
     });
 
+    /**
+     * 用于从预先设置好的 demo 中加载示例到页面上
+     * @param  {int} i 加载第 i 个示例
+     */
     function loadDemo(i) {
+        // 获取状态机
         rule_machine = demo[i].rule_machine;
+        // 在页面上将状态机显示出来，具体采用的是先清空表格，然后一行一行拼字符串加进去的方式
         $("#rule").text("");
         for (key in rule_machine) {
             for (tape_value in rule_machine[key]) {
                 $("#rule").append('<tr id="row' + ($("#rule").children().length + 1) + '"><th scope="row">' + ($("#rule").children().length + 1) + '</th><td><input type="text" class="form-control rule-from-status" placeholder="当前状态" value="' + key + '"></td><td><input type="text" class="form-control rule-from-tape" placeholder="纸带当前位置的值" value="' + tape_value + '"></td><td class="form-inline"><input type="text" class="form-control col-4 rule-to-status" placeholder="下一状态" value="' + rule_machine[key][tape_value]["rule_to_status"] + '"><input type="text" class="form-control col-4 rule-to-tape" placeholder="纸带变成" value="' + rule_machine[key][tape_value]["rule_to_tape"] + '"><div class="form-group form-inline col-4"><label>指针移动：</label><select class="form-control rule-index-move"><option value="L" ' + ((rule_machine[key][tape_value]["rule_index_move"] == "L") ? ' selected="selected"' : '') + '>左移</option><option value="S" ' + ((rule_machine[key][tape_value]["rule_index_move"] == "S") ? ' selected="selected"' : '') + '>不动</option><option value="R" ' + ((rule_machine[key][tape_value]["rule_index_move"] == "R") ? ' selected="selected"' : '') + '>右移</option></select></div></td></tr>');
             }
         }
+        // 在页面上显示其他配置
         $("#accept").val(demo[i].accept);
         $("#reject").val(demo[i].reject);
         $("#initial").val(demo[i].initial);
         $("#pos").val(demo[i].index);
+        // 在页面上显示初始纸带
         $("#tape").text("");
         for (var j = 0; j < demo[i].tape.length; j++) {
             $("#tape").append('<button type="button" id="' + $("#tape").children().length + '" class="btn btn-secondary" onclick="flip(this)">' + demo[i].tape[j] + '</button>');
         }
     }
 
+    /**
+     * 纸带上的数值零变一，一变零，点击纸带上格子的时候触发
+     * @param  {Object} cell 操作的纸带格子
+     */
     function flip(cell) {
         if (cell.innerHTML == 0) {
             cell.innerHTML = 1;
@@ -145,17 +158,30 @@
         }
     }
 
+    /**
+     * 运行这个图灵机
+     */
     function run() {
+        // 首先获取规则，如果获取规则失败，控制台记录日志后退出
         if (!getRules()) {
             console.log("信息输入有误，取消执行");
+            return;
         }
+        // 将当期状态设置为初始状态
         $("#current").val(initial);
+        // 给当前指针指向的纸带格子变颜色
         $("#" + index).removeClass("btn-secondary").addClass("btn-primary");
+        // 设置一个一秒钟（1000毫秒）触发的触发器，用来触发 change() 函数
         s = setInterval(change, 1000);
     }
 
+    /**
+     * 从用户填写的信息中获取程序执行能识别的规则
+     */
     function getRules() {
+        // 初始化变量
         rule_machine = {};
+        // 枚举表格每一行，判断是否合法，如果合法就加入状态机中
         for (var i = 1; i <= $("#rule").children().length; i++) {
             var key_status = $("tr#row" + i + " .rule-from-status").val();
             var key_tape = $("tr#row" + i + " .rule-from-tape").val();
@@ -176,10 +202,13 @@
                 alert("状态机输入有误：同一状态且纸带值相同时，有多种状态转移！");
                 return false;
             }
+            // 将当前状态和纸带上相应位置的值拼接为 key，对应当前行的行号，用于高亮显示当前生效的规则行
             table_highlight[key_status + "-" + key_tape] = "row" + i;
         }
+        // 适当记录日志
         console.log(rule_machine);
         console.log(JSON.stringify(rule_machine));
+        // 获取 Accept 集和 Reject 集并检查是否有重叠
         accept = $("#accept").val().split(",");
         reject = $("#reject").val().split(",");
         console.log(accept);
@@ -190,6 +219,7 @@
                 return false;
             }
         }
+        // 结合 Accept 集和 Reject 集再次检查状态机中的状态是否合法
         for (key in rule_machine) {
             rule_set = rule_machine[key];
             for (rule_key in rule_set) {
@@ -200,12 +230,14 @@
                 }
             }
         }
+        // 获取初始状态并检查合法性
         initial = "" + $("#initial").val();
         current = initial;
         if (rule_machine[initial] == null) {
             alert("初始状态不在状态机中！");
             return false;
         }
+        // 获取初始指针指向纸带上的值并检查合法性
         index = parseInt($("#pos").val());
         if (index < 0) {
             alert("当前指针不能是负数！");
@@ -214,11 +246,21 @@
             alert("当前指针超过纸带长度，请先增加纸带长度！");
             return false;
         }
+        // 所有的合法性检查都通过了的话，返回 true 以执行接下来的步骤
         return true;
     }
 
+    /**
+     * 转移状态并改变页面显示
+     */
     function change() {
+        // 如果表格里有之前高亮的行，先取消高亮
+        if (last_row != "") {
+            $("#" + last_row).removeClass("table-active");
+        }
+        // 获取纸带上的值
         value_on_tape = $("#" + index).text();
+        // 如果当前状态出现在 Accept 集或 Reject 集中，运行结束
         if ($.inArray(current, reject) != -1) {
             alert("Rejected!");
             stop();
@@ -228,11 +270,10 @@
             stop();
             return;
         }
-        if (last_row != "") {
-            $("#" + last_row).removeClass("table-active");
-        }
+        // 高亮当前生效的行
         last_row = table_highlight[current + "-" + value_on_tape];
         $("#" + last_row).addClass("table-active");
+        // 状态转移：改变当前状态和当前指针
         $("#current").val(rule_machine[current][value_on_tape].rule_to_status);
         $("#" + index).text(rule_machine[current][value_on_tape].rule_to_tape);
         console.log("Change: " + rule_machine[current][value_on_tape].rule_index_move);
@@ -242,22 +283,33 @@
         } else if (rule_machine[current][value_on_tape].rule_index_move == "L") {
             index = index - 1;
         }
+        // 如果纸带右侧不够长了自动增加
         if (index == $("#tape").children().length) {
             addTapeCell();
         }
+        // 移除纸带样式，展示当前状态和当前指针
         current = "" + $("#current").val();
         $("#" + index).removeClass("btn-secondary").addClass("btn-primary");
         $("#pos").val(index);
     }
 
+    /**
+     * 纸带上加一格
+     */
     function addTapeCell() {
         $("#tape").append('<button type="button" id="' + $("#tape").children().length + '" class="btn btn-secondary" onclick="flip(this)">0</button>');
     }
 
-    function addRule(argument) {
+    /**
+     * 表格里加一行
+     */
+    function addRule() {
         $("#rule").append('<tr id="row' + ($("#rule").children().length + 1) + '"><th scope="row">' + ($("#rule").children().length + 1) + '</th><td><input type="text" class="form-control rule-from-status" placeholder="当前状态"></td><td><input type="text" class="form-control rule-from-tape" placeholder="纸带当前位置的值"></td><td class="form-inline"><input type="text" class="form-control col-4 rule-to-status" placeholder="下一状态"><input type="text" class="form-control col-4 rule-to-tape" placeholder="纸带变成"><div class="form-group form-inline col-4"><label>指针移动：</label><select class="form-control rule-index-move"><option value="L">左移</option><option value="S" selected="selected">不动</option><option value="R">右移</option></select></div></td></tr>');
     }
 
+    /**
+     * 清理样式，停止触发器
+     */
     function stop() {
         $("#" + index).removeClass("btn-primary").addClass("btn-secondary");
         current = "";
