@@ -102,8 +102,10 @@
     accept = [];
     reject = [];
     rule_machine = {};
+    table_highlight = {};
     index = 0;
     current = 0;
+    last_row = "";
     s = {};
     demo = [
         { "button": "加载 Accept 示例", "rule_machine": { "Q0": { "0": { "rule_to_status": "Q1", "rule_to_tape": "1", "rule_index_move": "R" }, "1": { "rule_to_status": "Q0", "rule_to_tape": "1", "rule_index_move": "R" } }, "Q1": { "0": { "rule_to_status": "Q2", "rule_to_tape": "0", "rule_index_move": "L" }, "1": { "rule_to_status": "Q1", "rule_to_tape": "1", "rule_index_move": "R" } }, "Q2": { "1": { "rule_to_status": "Q3", "rule_to_tape": "0", "rule_index_move": "L" } } }, "accept": ["Q3"], "reject": ["Q4"], "tape": [1, 1, 1, 0, 1, 1, 0, 0], "initial": "Q0", "index": 0 },
@@ -174,6 +176,7 @@
                 alert("状态机输入有误：同一状态且纸带值相同时，有多种状态转移！");
                 return false;
             }
+            table_highlight[key_status + "-" + key_tape] = "row" + i;
         }
         console.log(rule_machine);
         console.log(JSON.stringify(rule_machine));
@@ -225,6 +228,11 @@
             stop();
             return;
         }
+        if (last_row != "") {
+            $("#" + last_row).removeClass("table-active");
+        }
+        last_row = table_highlight[current + "-" + value_on_tape];
+        $("#" + last_row).addClass("table-active");
         $("#current").val(rule_machine[current][value_on_tape].rule_to_status);
         $("#" + index).text(rule_machine[current][value_on_tape].rule_to_tape);
         console.log("Change: " + rule_machine[current][value_on_tape].rule_index_move);
